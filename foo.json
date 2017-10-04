@@ -1,0 +1,57 @@
+[
+{
+  "question": {
+    "text": "best president?",
+    "choices": ["Lincoln", "Obama", "Trump"]
+  },
+  "answer": {
+    "choice": 0,
+    "acceptable_answers": [0, 1],
+    "importance": 50
+  }
+},
+{
+  "question": {
+    "text": "do you floss?",
+    "choices": ["yes", "no"]
+  },
+  "answer": {
+    "choice": 1,
+    "acceptable_answers": [0, 1],
+    "importance": 23
+  }
+},
+{
+  "question": {
+    "text": "best food?",
+    "choices": ["chicken", "bread", "chocolate"]
+  },
+  "answer": {
+    "choice": 2,
+    "acceptable_answers": [0, 2],
+    "importance": 25
+  }
+},
+{
+  "question": {
+    "text": "your gender?",
+    "choices": ["male", "female", "other"]
+  },
+  "answer": {
+    "choice": 0,
+    "acceptable_answers": [1, 2],
+    "importance": 100
+  }
+},
+{
+  "question": {
+    "text": "do you masturbate in the shower?",
+    "choices": ["yes", "no"]
+  },
+  "answer": {
+    "choice": 0,
+    "acceptable_answers": [0],
+    "importance": 30 
+  }
+}
+]
