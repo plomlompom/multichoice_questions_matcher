@@ -1,57 +1,61 @@
-[
-{
-  "question": {
-    "text": "best president?",
-    "choices": ["Lincoln", "Obama", "Trump"]
-  },
-  "answer": {
-    "choice": 0,
-    "acceptable_answers": [0, 1],
-    "importance": 50
-  }
-},
-{
-  "question": {
-    "text": "do you floss?",
-    "choices": ["yes", "no"]
-  },
-  "answer": {
-    "choice": 1,
-    "acceptable_answers": [0, 1],
-    "importance": 23
-  }
-},
-{
-  "question": {
-    "text": "best food?",
-    "choices": ["chicken", "bread", "chocolate"]
-  },
-  "answer": {
-    "choice": 2,
-    "acceptable_answers": [0, 2],
-    "importance": 25
-  }
-},
-{
-  "question": {
-    "text": "your gender?",
-    "choices": ["male", "female", "other"]
-  },
-  "answer": {
-    "choice": 0,
-    "acceptable_answers": [1, 2],
-    "importance": 100
-  }
-},
-{
-  "question": {
-    "text": "do you masturbate in the shower?",
-    "choices": ["yes", "no"]
-  },
-  "answer": {
-    "choice": 0,
-    "acceptable_answers": [0],
-    "importance": 30 
-  }
-}
-]
+[{
+  "question_prompt": "best president?",
+  "available_answers": [{
+    "answer_text": "Lincoln",
+    "chosen": true,
+    "acceptable": true
+  }, {
+    "answer_text": "Obama",
+    "acceptable": true
+  }, {
+    "answer_text": "Trump"
+  }],
+  "importance": 50
+}, {
+  "question_prompt": "do you floss?",
+  "available_answers": [{
+    "answer_text": "yes",
+    "acceptable": true
+  }, {
+    "answer_text": "no",
+    "chosen": true,
+    "acceptable": true
+  }],
+  "importance": 23
+}, {
+  "question_prompt": "best food?",
+  "available_answers": [{
+    "answer_text": "chicken",
+    "acceptable": true
+  }, {
+    "answer_text": "bread"
+  }, {
+    "answer_text": "chocolate",
+    "chosen": true,
+    "acceptable": true
+  }],
+  "importance": 25
+}, {
+  "question_prompt": "your gender?",
+  "available_answers": [{
+    "answer_text": "male",
+    "chosen": true
+  }, {
+    "answer_text": "female",
+    "acceptable": true
+  }, {
+    "answer_text": "other",
+    "acceptable": true
+  }],
+  "importance": 100
+}, {
+  "question_prompt": "do you masturbate in the shower?",
+  "available_answers": [{
+    "answer_text": "yes",
+    "acceptable": true,
+    "chosen": true
+  }, {
+    "answer_text": "no"
+  }],
+  "importance": 30
+}]

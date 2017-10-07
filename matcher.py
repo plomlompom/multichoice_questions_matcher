@@ -7,87 +7,220 @@
 
 
 import unittest
-import json
+import jsonschema
+
+
+schema = {
+    '$schema': 'http://json-schema.org/schema#',
+    'title': 'answer set',
+    'type': 'array',
+    'items': {
+        'type': 'object',
+        'properties': {
+            'question_prompt': {
+                'type': 'string',
+                'minLength': 1
+            },
+            'available_answers': {
+                'type': 'array',
+                'items': {
+                    'properties': {
+                        'answer_text': {
+                            'type': 'string',
+                            'minLength': 1
+                        },
+                        'chosen': {
+                            'type': 'boolean',
+                            'default': False
+                        },
+                        'acceptable': {
+                            'type': 'boolean',
+                            'default': False
+                        }
+                    },
+                    'required': ['answer_text'],
+                    'additionalProperties': False
+                },
+                'minItems': 2
+            },
+            'importance': {
+                'type': 'integer',
+                'minimum': 0
+            }
+        },
+        'required': ['question_prompt', 'available_answers', 'importance'],
+        'additionalProperties': False
+    }
+}
 
 
 class MultiChoiceQuestion:
 
-    def __init__(self, question, choices):
-
-        # input validation
-        if type(question) != str:
-            raise TypeError('question must be string')
-        if len(question) == 0:
-            raise ValueError('question must be non-empty')
-        if type(choices) not in {list, tuple}:
-            raise TypeError('choices must be list or tuple')
-        if len(choices) < 2:
-            raise ValueError('choices must be of size >1')
-        unique_choices = []
-        for choice in choices:
-            if choice in unique_choices:
-                raise ValueError('choices must be unique')
-            unique_choices += [choice]
-            if type(choice) != str:
-                raise TypeError('members of choices must be strings')
-            if len(choice) == 0:
-                raise ValueError('choices must be non-empty strings')
-
-        # assignment
-        self.question = question
-        self.choices = list(choices)
+    def __init__(self, question_prompt, available_answers):
+        unique_answers = []
+        for answer in available_answers:
+            if answer in unique_answers:
+                raise ValueError('duplicate available answer text: ' + answer)
+            unique_answers += [answer]
+        self.prompt = question_prompt
+        self.answers = available_answers
 
     def __eq__(self, other):
         if type(other) != MultiChoiceQuestion:
             msg = 'can compare MultiChoiceQuestion only with same type'
             raise TypeError(msg)
-        return self.question == other.question and \
-            self.choices == other.choices
+        return self.prompt == other.prompt and self.answers == other.answers
 
 
-class Answer:
-    def __init__(self, question, answer, acceptable_answers, importance):
+class AnswersList:
 
-        def validate_answer(answer):
-            if type(answer) != int:
-                raise TypeError('answer must be integer')
-            if answer < 0 or answer >= len(question.choices):
-                msg = 'answer must be >= 0 and < len(question.choices)'
-                raise ValueError(msg)
+    def __init__(self, d):
+        jsonschema.validate(d, schema)
+        self.question_answer_complexes = []
+        unique_questions = []
+        for answer in d:
+            available_answer_texts = []
+            choice = -1
+            acceptable_choices = []
+            for i in range(len(answer['available_answers'])):
+                available_answer = answer['available_answers'][i]
+                available_answer_texts += [available_answer['answer_text']]
+                if 'chosen' in available_answer and available_answer['chosen']:
+                    if choice > -1:
+                        raise ValueError('more than one answer thosen')
+                    choice = i
+                if 'acceptable' in available_answer and \
+                        available_answer['acceptable']:
+                    acceptable_choices += [i]
+            if choice == -1:
+                raise ValueError('no answer chosen')
+            question = MultiChoiceQuestion(answer['question_prompt'],
+                                           available_answer_texts)
+            if question in unique_questions:
+                raise ValueError('question answered more than once')
+            unique_questions += [question]
+            self.question_answer_complexes += [{
+                'question': question,
+                'choice': choice,
+                'acceptable_choices': acceptable_choices,
+                'importance': answer['importance'],
+            }]
 
-        # input validation
-        if type(question) != MultiChoiceQuestion:
-            raise TypeError('question must be MultiChoiceQuestion')
-        validate_answer(answer)
-        if type(acceptable_answers) not in {tuple, list}:
-            raise TypeError('acceptable_answers must be tuple or list')
-        if len(acceptable_answers) == 0:
-            raise ValueError('acceptable_answers must be non-empty')
-        unique_acceptable_answers = []
-        for a in acceptable_answers:
-            if a in unique_acceptable_answers:
-                raise ValueError('acceptable_answers must contain no doubles')
-            unique_acceptable_answers += [a]
-            validate_answer(a)
-        if type(importance) != int:
-            raise TypeError('importance must be integer')
-        if importance < 0:
-            raise ValueError('importance must be non-negative')
 
-        # assignment
-        self.question = question
-        self.answer = answer
-        self.acceptable_answers = list(acceptable_answers)
-        self.importance = importance
+class TestAll(unittest.TestCase):
 
-    def __eq__(self, other):
-        if type(other) != Answer:
-            msg = 'can compare Answer only with same type'
-            raise TypeError(msg)
-        return self.question == other.question and \
-            self.answer == other.answer and \
-            self.acceptable_answers == other.acceptable_answers and \
-            self.importance == other.importance
+    def test_answerlist_validation(self):
+        from functools import partial
+        from copy import deepcopy
+        schema_fail = partial(self.assertRaises,
+                              jsonschema.exceptions.ValidationError,
+                              AnswersList)
+        value_fail = partial(self.assertRaises, ValueError, AnswersList)
+        schema_fail({})
+        AnswersList([])
+        schema_fail([{}])
+        schema_fail([0])
+        good = [{
+          "question_prompt": "?",
+          "available_answers": [{
+            "answer_text": "0",
+            "chosen": False,
+            "acceptable": True
+            }, {
+            "answer_text": "1",
+            "chosen": True,
+            "acceptable": True
+          }],
+          "importance": 0
+        }]
+        AnswersList(good)
+        bad = deepcopy(good)
+        del bad[0]['available_answers'][0]
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['question_prompt'] = 0
+        schema_fail(bad)
+        bad[0]['question_prompt'] = ''
+        schema_fail(bad)
+        del bad[0]['question_prompt']
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['importance'] = 'x'
+        schema_fail(bad)
+        bad[0]['importance'] = 3.14
+        schema_fail(bad)
+        bad[0]['importance'] = -1
+        schema_fail(bad)
+        del bad[0]['importance']
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][0]['answer_text'] = 0
+        schema_fail(bad)
+        bad[0]['available_answers'][0]['answer_text'] = ''
+        schema_fail(bad)
+        del bad[0]['available_answers'][0]['answer_text']
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][0]['chosen'] = 'x'
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][0]['acceptable'] = 'x'
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['foo'] = 0
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][0]['foo'] = 0
+        schema_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][0]['chosen'] = True
+        value_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][1]['chosen'] = False
+        value_fail(bad)
+        bad = deepcopy(good)
+        bad[0]['available_answers'][1]['answer_text'] = '0'
+        value_fail(bad)
+        bad = deepcopy(good)
+        bad += [deepcopy(bad[0])]
+        value_fail(bad)
+
+    def test_match(self):
+
+        def answers(presets):
+            answers = AnswersList([])
+            for a in presets:
+                answers.question_answer_complexes += [{
+                    'question': a[0],
+                    'choice': a[1],
+                    'acceptable_choices': a[2],
+                    'importance': a[3],
+                }]
+            return answers
+
+        q1 = MultiChoiceQuestion('x', ('0', '1', '2'))
+        q2 = MultiChoiceQuestion('x', ('0', '1'))
+        q3 = MultiChoiceQuestion('y', ('0', '1', '2'))
+        a1 = (q1, 0, (0,), 100)
+        a2 = (q2, 0, (0,), 100)
+        a3 = (q3, 0, (0,), 100)
+        self.assertEqual(match(answers([]), answers([])), 0)
+        self.assertEqual(match(answers([a1]), answers([])), 0)
+        self.assertEqual(match(answers([a1]), answers([a1])), 0)
+        self.assertEqual(match(answers([a1, a2]), answers([a1])), 0)
+        self.assertEqual(match(answers([a1, a2]), answers([a1, a2])), 0.5)
+        self.assertEqual(match(answers([a1, a2, a3]), answers([a1, a2, a3])),
+                         0.6666666666666667)
+        self.assertEqual(match(answers([a1, a2, a3]), answers([a1, a2])), 0.5)
+        a1 = (q1, 0, (1, 2), 50)
+        b1 = (q1, 1, (1,), 25)
+        a2 = (q2, 0, (0,), 10)
+        b2 = (q2, 1, (0,), 10)
+        a3 = (q3, 0, (0,), 50)
+        b3 = (q3, 1, (0,), 70)
+        self.assertEqual(match(answers([a1, a2]), answers([b1, b2])), 0)
+        self.assertEqual(match(answers([a1, a2, a3]), answers([b1, b2, b3])),
+                         0.25515655300316636)
 
 
 def match(answers_1, answers_2):
@@ -95,36 +228,22 @@ def match(answers_1, answers_2):
     This function computes a match between two lists of Answers using
     the algorithm from <http://www.okcupid.com/help/match-percentages>.
     """
-
-    # input validation
-    for answers in (answers_1, answers_2):
-        if type(answers) not in {list, tuple}:
-            raise TypeError('answers must be list or tuple')
-        unique_questions = []
-        for answer in answers:
-            if type(answer) != Answer:
-                raise TypeError('answers must consist of Answer objects')
-            if answer.question in unique_questions:
-                raise ValueError('question answered more than once')
-            unique_questions += [answer.question]
-
-    # match calculation
     from math import sqrt
     shared_questions = 0
     answers_1_maxpoints = 0
     answers_2_maxpoints = 0
     answers_1_points = 0
     answers_2_points = 0
-    for answer_1 in answers_1:
-        for answer_2 in answers_2:
-            if answer_1.question == answer_2.question:
+    for answer_1 in answers_1.question_answer_complexes:
+        for answer_2 in answers_2.question_answer_complexes:
+            if answer_1['question'] == answer_2['question']:
                 shared_questions += 1
-                answers_1_maxpoints += answer_1.importance
-                answers_2_maxpoints += answer_2.importance
-                if answer_1.answer in answer_2.acceptable_answers:
-                    answers_2_points += answer_2.importance
-                if answer_2.answer in answer_1.acceptable_answers:
-                    answers_1_points += answer_1.importance
+                answers_1_maxpoints += answer_1['importance']
+                answers_2_maxpoints += answer_2['importance']
+                if answer_1['choice'] in answer_2['acceptable_choices']:
+                    answers_2_points += answer_2['importance']
+                if answer_2['choice'] in answer_1['acceptable_choices']:
+                    answers_1_points += answer_1['importance']
                 break
     match_1 = 0
     if answers_1_maxpoints > 0:
@@ -139,147 +258,10 @@ def match(answers_1, answers_2):
     return match_both
 
 
-def parse_answers_list(answers_list_string):
-    answers = []
-    list_answers = json.loads(answers_list_string)
-    if type(list_answers) != list:
-        raise TypeError('answers not in array/list form')
-    for entry in list_answers:
-        if type(entry) != dict:
-            raise TypeError('entry must be object/dict')
-        if not set() == {'question', 'answer'} ^ set(entry.keys()):
-            raise ValueError('entry keys must be "question", "answer"')
-        if type(entry['question']) != dict:
-            raise TypeError('question must be object/dict')
-        if not set() == {'text', 'choices'} ^ set(entry['question'].keys()):
-            raise ValueError('question keys must be "text", "choices"')
-        if type(entry['answer']) != dict:
-            raise TypeError('question must be object/dict')
-        if not set() == {'choice',
-                         'acceptable_answers',
-                         'importance'} ^ set(entry['answer'].keys()):
-            raise ValueError('answers keys must be "choice", '
-                             '"acceptable_answers", "importance')
-        q = MultiChoiceQuestion(entry['question']['text'],
-                                entry['question']['choices'])
-        a = Answer(q, entry['answer']['choice'],
-                   entry['answer']['acceptable_answers'],
-                   entry['answer']['importance'])
-        answers += [a]
-    return answers
-
-
-class TestAll(unittest.TestCase):
-
-    def test_question(self):
-        self.assertRaises(TypeError, MultiChoiceQuestion, 0, ('0', '1'))
-        self.assertRaises(ValueError, MultiChoiceQuestion, '', ('0', '1'))
-        self.assertRaises(ValueError, MultiChoiceQuestion, '0', ('', '1'))
-        self.assertRaises(ValueError, MultiChoiceQuestion, '0', ('0', '0'))
-        self.assertRaises(TypeError, MultiChoiceQuestion, '0', ('0', 0))
-        self.assertRaises(ValueError, MultiChoiceQuestion, '0', ())
-        self.assertRaises(TypeError, MultiChoiceQuestion, '0', 0)
-
-    def test_answer(self):
-        q1 = MultiChoiceQuestion('Gender?',
-                                 ('male', 'female', 'other'))
-        self.assertRaises(TypeError, Answer, 0, 0, (0,), 0)
-        self.assertRaises(TypeError, Answer, q1, 'x', (0,), 0)
-        self.assertRaises(ValueError, Answer, q1, -1, (0,), 0)
-        self.assertRaises(ValueError, Answer, q1, 3, (0,), 0)
-        self.assertRaises(TypeError, Answer, q1, 0, 0, 0)
-        self.assertRaises(TypeError, Answer, q1, 0, ('x'), 0)
-        self.assertRaises(ValueError, Answer, q1, 0, (-1,), 0)
-        self.assertRaises(ValueError, Answer, q1, 0, (3,), 0)
-        self.assertRaises(TypeError, Answer, q1, 0, (0,), 'x')
-        self.assertRaises(ValueError, Answer, q1, 0, (0, 0), 'x')
-        self.assertRaises(ValueError, Answer, q1, 0, (0,), -1)
-
-    def test_match(self):
-        q1 = MultiChoiceQuestion('Gender?',
-                                 ('male', 'female', 'other'))
-        q2 = MultiChoiceQuestion('Do you like trains?',
-                                 ('yes', 'no'))
-        q3 = MultiChoiceQuestion('Best president?',
-                                 ('Lincoln', 'Obama', 'Trump'))
-        a1 = Answer(q1, 0, (0,), 100)
-        a2 = Answer(q2, 0, (0,), 100)
-        a3 = Answer(q3, 0, (0,), 100)
-        self.assertRaises(TypeError, match, [], 0)
-        self.assertRaises(TypeError, match, [], [0])
-        self.assertRaises(ValueError, match, [a1, a1], [])
-        self.assertEqual(match([], []), 0)
-        self.assertEqual(match([a1], [a1]), 0)
-        self.assertEqual(match([a1, a2], [a1]), 0)
-        self.assertEqual(match([a1, a2], [a1, a2]), 0.5)
-        answers_1 = [a1, a2, a3]
-        answers_2 = [a1, a2, a3]
-        self.assertEqual(match(answers_1, answers_2), 0.6666666666666667)
-        answers_1 = [a1, a2, a3]
-        answers_2 = [a1, a2]
-        self.assertEqual(match(answers_1, answers_2), 0.5)
-        a1 = Answer(q1, 0, (1, 2), 50)
-        b1 = Answer(q1, 1, (1,), 25)
-        a2 = Answer(q2, 0, (0,), 10)
-        b2 = Answer(q2, 1, (0,), 10)
-        a3 = Answer(q3, 0, (0,), 50)
-        b3 = Answer(q3, 1, (0,), 70)
-        answers_1 = [a1, a2]
-        answers_2 = [b1, b2]
-        self.assertEqual(match(answers_1, answers_2), 0)
-        answers_1 = [a1, a2, a3]
-        answers_2 = [b1, b2, b3]
-        self.assertEqual(match(answers_1, answers_2), 0.25515655300316636)
-
-    def test_parser(self):
-        import copy
-        self.assertRaises(TypeError, parse_answers_list, '0')
-        self.assertRaises(TypeError, parse_answers_list, '{}')
-        self.assertRaises(TypeError, parse_answers_list, '[0]')
-        answer_list = [{
-            'question': {
-                'text': 'x',
-                'choices': ['0', '1']
-            },
-            'answer': {
-                'choice': 0,
-                'acceptable_answers': [0],
-                'importance':0}
-            }
-        ]
-        bad = copy.deepcopy(answer_list)
-        del bad[0]['question']['text']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad = copy.deepcopy(answer_list)
-        del bad[0]['question']['choices']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad[0]['question'] = 0
-        self.assertRaises(TypeError, parse_answers_list, json.dumps(bad))
-        del bad[0]['question']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad = copy.deepcopy(answer_list)
-        del bad[0]['answer']['choice']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad = copy.deepcopy(answer_list)
-        del bad[0]['answer']['acceptable_answers']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad = copy.deepcopy(answer_list)
-        del bad[0]['answer']['importance']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        bad[0]['answer'] = 0
-        self.assertRaises(TypeError, parse_answers_list, json.dumps(bad))
-        del bad[0]['answer']
-        self.assertRaises(ValueError, parse_answers_list, json.dumps(bad))
-        answers = parse_answers_list(json.dumps(answer_list))
-        q_cmp = MultiChoiceQuestion('x', ['0', '1'])
-        self.assertEqual(answers[0].question, q_cmp)
-        a_cmp = Answer(q_cmp, 0, (0,), 0)
-        self.assertEqual(answers[0], a_cmp)
-
-
 if __name__ == '__main__':
     import sys
     import os.path
+    import json
     if len(sys.argv) != 3:
         print('need precisely two filename arguments')
         exit(1)
@@ -294,11 +276,13 @@ if __name__ == '__main__':
         json_text = f.read()
         f.close()
         try:
-            answers_lists += [parse_answers_list(json_text)]
+            d = json.loads(json_text)
         except json.decoder.JSONDecodeError as err:
             print('Trouble JSON-decoding answers file:', err)
             exit(1)
-        except (ValueError, TypeError) as err:
+        try:
+            answers_lists += [AnswersList(d)]
+        except (ValueError, jsonschema.exceptions.ValidationError) as err:
             print('Malformed answers file:', err)
             exit(1)
     print(match(answers_lists[0], answers_lists[1]))
