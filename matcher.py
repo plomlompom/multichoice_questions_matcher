@@ -79,6 +79,48 @@ def match(aqs_1, aqs_2):
     return match_both
 
 
+def print_analysis(aqs_1, aqs_2):
+    len_shared_questions = 0
+    print('Matching table column legend:')
+    print('c: person 1 chooses this answer')
+    print('C: person 2 chooses this answer')
+    print('a: person 1 accepts this as a valid choice for person 2')
+    print('A: person 2 accepts this as a valid choice for person 1')
+    print('==================================')
+    for aq_1 in aqs_lists[0].db:
+        for aq_2 in aqs_lists[1].db:
+            if aq_1.question == aq_2.question:
+                len_shared_questions += 1
+                print(aq_1.question.prompt)
+                print()
+                print('c|a|C|A|answer')
+                print('-+-+-+-+--------')
+                for i in range(len(aq_1.question.selectables)):
+                    selectable = aq_1.question.selectables[i]
+                    chosen_1 = 'x|' if i == aq_1.choice else ' |'
+                    chosen_2 = 'x|' if i == aq_2.choice else ' |'
+                    acceptable_1 = 'x|' if i in aq_1.acceptable else ' |'
+                    acceptable_2 = 'x|' if i in aq_2.acceptable else ' |'
+                    print(chosen_1 + acceptable_1 + chosen_2 + acceptable_2 + 
+                          selectable)
+                print()
+                print('Person 1 assigns importance %s to choice of person 2.' %
+                      aq_1.importance)
+                print('Person 2 assigns importance %s to choice of person 1.' %
+                      aq_2.importance)
+                print('==================================')
+                break
+    questions_1_len = len(aqs_1.unique_questions)
+    questions_2_len = len(aqs_2.unique_questions)
+    print('Matched questions:', len_shared_questions)
+    print('Non-matched questions from 1:',
+          questions_1_len - len_shared_questions)
+    print('Non-matched questions from 2:',
+          questions_2_len - len_shared_questions)
+    print('Overall match:',
+          str(round(match(aqs_lists[0], aqs_lists[1]) * 100)) + '%')
+
+
 if __name__ == '__main__':
     import os.path
     import argparse
@@ -98,18 +140,4 @@ if __name__ == '__main__':
             print(err)
             exit(1)
         aqs_lists += [aqs_list]
-    print(match(aqs_lists[0], aqs_lists[1]))
-    for aq_1 in aqs_lists[0].db:
-        for aq_2 in aqs_lists[1].db:
-            if aq_1.question == aq_2.question:
-                print('QUESTION:', aq_1.question.prompt)
-                print(aq_1.importance, aq_2.importance)
-                for i in range(len(aq_1.question.selectables)):
-                    selectable = aq_1.question.selectables[i]
-                    chosen_1 = 'y' if i == aq_1.choice else ' '
-                    chosen_2 = 'y' if i == aq_2.choice else ' '
-                    acceptable_1 = 'a' if i in aq_1.acceptable else ' '
-                    acceptable_2 = 'a' if i in aq_2.acceptable else ' '
-                    print(chosen_1, acceptable_1, chosen_2, acceptable_2,
-                          selectable)
-                break
+    print_analysis(aqs_lists[0], aqs_lists[1])
