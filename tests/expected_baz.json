@@ -1,0 +1,82 @@
+[
+  {
+    "importance": 33,
+    "prompt": "best food?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "chicken"
+      },
+      {
+        "acceptable": true,
+        "chosen": true,
+        "text": "bread"
+      },
+      {
+        "text": "chocolate"
+      }
+    ]
+  },
+  {
+    "importance": 92,
+    "prompt": "do you masturbate in the shower?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "chosen": true,
+        "text": "yes"
+      },
+      {
+        "text": "no"
+      }
+    ]
+  },
+  {
+    "importance": 50,
+    "prompt": "best president?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "chosen": true,
+        "text": "Lincoln"
+      },
+      {
+        "acceptable": true,
+        "text": "Obama"
+      },
+      {
+        "text": "Trump"
+      }
+    ]
+  },
+  {
+    "importance": 42,
+    "prompt": "your gender?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "male"
+      },
+      {
+        "chosen": true,
+        "text": "female"
+      },
+      {
+        "text": "other"
+      }
+    ]
+  },
+  {
+    "importance": 0,
+    "prompt": "do you floss?",
+    "selectables": [
+      {
+        "chosen": true,
+        "text": "yes"
+      },
+      {
+        "text": "no"
+      }
+    ]
+  }
+]
