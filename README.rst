@@ -1,6 +1,16 @@
 multichoice_questions_matcher
 =============================
 
+Setup
+-----
+
+You need to install the requirements from the requirements.txt file:
+
+ $ pip install -r requirements.txt
+
+Usage
+-----
+
 Create and answer questions, write json to stdout:
 
  $ ./answer.py
