@@ -1,0 +1,44 @@
+[
+  {
+    "importance": 0,
+    "available_answers": [
+      {
+        "chosen": true,
+        "answer_text": "a"
+      },
+      {
+        "answer_text": "b"
+      }
+    ],
+    "question_prompt": "a"
+  },
+  {
+    "importance": 0,
+    "available_answers": [
+      {
+        "chosen": true,
+        "answer_text": "a"
+      },
+      {
+        "answer_text": "b"
+      },
+      {
+        "answer_text": "c"
+      }
+    ],
+    "question_prompt": "a"
+  },
+  {
+    "importance": 0,
+    "available_answers": [
+      {
+        "chosen": true,
+        "answer_text": "a"
+      },
+      {
+        "answer_text": "c"
+      }
+    ],
+    "question_prompt": "a"
+  }
+]
