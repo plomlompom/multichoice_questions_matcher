@@ -35,16 +35,21 @@ def affirm(prompt):
 
 
 if __name__ == '__main__':
-    import sys
+    import argparse
     import os.path
     import json
-    if len(sys.argv) not in {2, 3}:
-        print('need one or two filename arguments')
-        exit(1)
-    paths = [sys.argv[1]]
-    if len(sys.argv) == 3:
-        paths += [sys.argv[2]]
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('-t', '--target', metavar='FILEPATH',
+                           help='answers file to write/append')
+    argparser.add_argument('-s', '--source', metavar='FILEPATH',
+                           help='answers file to source new questions from')
+    args = argparser.parse_args()
     answers_lists = [matchlib.AnswersList(), matchlib.AnswersList()]
+    paths = []
+    if args.target:
+        paths += [args.target]
+    if args.source:
+        paths += [args.source]
     for i in range(len(paths)):
         path = paths[i]
         if os.path.isfile(path):
@@ -55,11 +60,11 @@ if __name__ == '__main__':
                 exit(1)
             answers_lists[i] = answers_list
     answers_list = answers_lists[0]
-    if len(answers_lists) == 2:
+    if args.source:
         questions_template = answers_lists[1]
         questions = [a.question for a
                      in questions_template.question_answer_complexes
-                     if not a.question in answers_list.unique_questions]
+                     if a.question not in answers_list.unique_questions]
         for q in questions:
             print('QUESTION: ' + q.prompt)
             for i in range(len(q.answers)):
@@ -108,6 +113,10 @@ if __name__ == '__main__':
         except matchlib.QuestionDuplicationError:
             if affirm('question already answered, overwrite old answer?'):
                 answers_list.add_answer(answer, True)
-    f = open(paths[0], 'w')
-    f.write(json.dumps(answers_list.to_json(), indent=2))
-    f.close()
+    json_dump = json.dumps(answers_list.to_json(), indent=2)
+    if args.target:
+        f = open(args.target, 'w')
+        f.write(json_dump)
+        f.close()
+    else:
+        print(json_dump)

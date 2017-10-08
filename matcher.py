@@ -79,16 +79,17 @@ def match(answers_1, answers_2):
     return match_both
 
 
+
+
 if __name__ == '__main__':
-    import sys
     import os.path
-    if len(sys.argv) != 3:
-        print('need precisely two filename arguments')
-        exit(1)
-    path_1 = sys.argv[1]
-    path_2 = sys.argv[2]
+    import argparse
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('answers_files', nargs=2, metavar='FILEPATH',
+                           help='one of both answers files which to compare')
+    args = argparser.parse_args()
     answers_lists = []
-    for path in (path_1, path_2):
+    for path in args.answers_files:
         if not os.path.isfile(path):
             print('no file at path:', path)
             exit(1)
