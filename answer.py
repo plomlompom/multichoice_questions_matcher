@@ -49,8 +49,7 @@ if __name__ == '__main__':
                            help='treat FILEPATH for --source as URL to '
                                 'retrieve data remotely from')
     args = argparser.parse_args()
-    aq_lists = [matchlib.AnsweredQuestionsList(),
-                matchlib.AnsweredQuestionsList()]
+    aq_lists = []
     paths = []
     if args.target:
         paths += [args.target]
@@ -70,10 +69,10 @@ if __name__ == '__main__':
             except matchlib.AnsweredQuestionsParseError as err:
                 print(err)
                 exit(1)
-            aq_lists[i] = aq_list
-    aq_list = aq_lists[0]
+            aq_lists += [aq_list]
+    aq_list = aq_lists[0] if args.target else matchlib.AnsweredQuestionsList()
     if args.source:
-        questions_template = aq_lists[1]
+        questions_template = aq_lists[int(args.target is not None)]
         questions = [a.question for a
                      in sorted(questions_template.db,
                                key=lambda aq: aq.importance, reverse=True)
