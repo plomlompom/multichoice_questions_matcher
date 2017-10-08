@@ -38,12 +38,16 @@ if __name__ == '__main__':
     import argparse
     import os.path
     import json
+    import urllib
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-t', '--target', metavar='FILEPATH',
                            help='answered questions file to write/append')
     argparser.add_argument('-s', '--source', metavar='FILEPATH',
                            help='answered questions file to source new ' +
                                 'questions from')
+    argparser.add_argument('-g', '--get', action='store_true',
+                           help='treat FILEPATH for --source as URL to '
+                                'retrieve data remotely from')
     args = argparser.parse_args()
     aq_lists = [matchlib.AnsweredQuestionsList(),
                 matchlib.AnsweredQuestionsList()]
@@ -54,6 +58,12 @@ if __name__ == '__main__':
         paths += [args.source]
     for i in range(len(paths)):
         path = paths[i]
+        if args.get and i == 1:
+            try:
+                path, _ = urllib.request.urlretrieve(path)
+            except (ValueError, urllib.error.HTTPError) as err:
+                print('trouble retrieving file:', err)
+                exit(1)
         if os.path.isfile(path):
             try:
                 aq_list = matchlib.AnsweredQuestionsList(path=path)
