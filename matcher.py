@@ -101,7 +101,7 @@ def print_analysis(aqs_1, aqs_2):
                     chosen_2 = 'x|' if i == aq_2.choice else ' |'
                     acceptable_1 = 'x|' if i in aq_1.acceptable else ' |'
                     acceptable_2 = 'x|' if i in aq_2.acceptable else ' |'
-                    print(chosen_1 + acceptable_1 + chosen_2 + acceptable_2 + 
+                    print(chosen_1 + acceptable_1 + chosen_2 + acceptable_2 +
                           selectable)
                 print()
                 print('Person 1 assigns importance %s to choice of person 2.' %
@@ -124,20 +124,33 @@ def print_analysis(aqs_1, aqs_2):
 if __name__ == '__main__':
     import os.path
     import argparse
+    import urllib
     argparser = argparse.ArgumentParser()
     argparser.add_argument('aqs_files', nargs=2,
                            metavar='FILEPATH', help='one of both answered ' +
                            'questions files which to compare')
+    argparser.add_argument('-g', '--get', action='append', choices=['0', '1'],
+                           metavar='INT',
+                           help='define INT-nth FILEPATH to be URL to get '
+                                'answered questions from (may be called '
+                                'twice) (valid values: 0, 1)')
     args = argparser.parse_args()
     aqs_lists = []
-    for path in args.aqs_files:
+    for i in range(len(args.aqs_files)):
+        path = args.aqs_files[i]
+        if args.get and str(i) in args.get:
+            try:
+                path, _ = urllib.request.urlretrieve(path)
+            except (ValueError, urllib.error.HTTPError) as err:
+                print('trouble retrieving file:', err)
+                exit(1)
         if not os.path.isfile(path):
             print('no file at path:', path)
             exit(1)
         try:
             aqs_list = matchlib.AnsweredQuestionsList(path=path)
         except matchlib.AnsweredQuestionsParseError as err:
-            print(err)
+            print(path + ':', err)
             exit(1)
         aqs_lists += [aqs_list]
     print_analysis(aqs_lists[0], aqs_lists[1])
