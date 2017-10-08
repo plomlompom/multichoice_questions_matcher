@@ -38,19 +38,47 @@ if __name__ == '__main__':
     import sys
     import os.path
     import json
-    if len(sys.argv) != 2:
-        print('need precisely one filename argument')
+    if len(sys.argv) not in {2, 3}:
+        print('need one or two filename arguments')
         exit(1)
-    path = sys.argv[1]
-    answers_list = matchlib.AnswersList()
-    if os.path.isfile(path):
-        try:
-            answers_list = matchlib.AnswersList(path=path)
-        except matchlib.AnswersParseError as err:
-            print(err)
-            exit(1)
-    more_questions = True
-    while more_questions:
+    paths = [sys.argv[1]]
+    if len(sys.argv) == 3:
+        paths += [sys.argv[2]]
+    answers_lists = []
+    for path in paths:
+        if os.path.isfile(path):
+            try:
+                answers_list = matchlib.AnswersList(path=path)
+            except matchlib.AnswersParseError as err:
+                print(err)
+                exit(1)
+        answers_lists += [answers_list]
+    if len(answers_lists) == 0:
+        answers_lists = [matchlib.AnswersList()]
+    answers_list = answers_lists[0]
+    if len(answers_lists) == 2:
+        questions_template = answers_lists[1]
+        questions = [a.question for a
+                     in questions_template.question_answer_complexes
+                     if not a.question in answers_list.unique_questions]
+        for q in questions:
+            print('QUESTION: ' + q.prompt)
+            for i in range(len(q.answers)):
+                print('#%s: %s' % (str(i), q.answers[i]))
+            i_max = i
+            if affirm('Answer this question?'):
+                acceptable_choices = []
+                choice = get_int('your answer?', i_max)
+                importance = get_int('importance?')
+                if importance > 0:
+                    for i in range(len(q.answers)):
+                        if affirm('acceptable answer? ' + q.answers[i]):
+                            acceptable_choices += [i]
+                a = matchlib.Answer(q, choice, acceptable_choices, importance)
+                answers_list.add_answer(a)
+    while True:
+        if not affirm('add another question+answer?'):
+            break
         prompt = get_string('question prompt: ')
         available_answers = []
         acceptable_answers = []
@@ -81,9 +109,6 @@ if __name__ == '__main__':
         except matchlib.QuestionDuplicationError:
             if affirm('question already answered, overwrite old answer?'):
                 answers_list.add_answer(answer, True)
-        if not affirm('add another question+answer?'):
-            more_questions = False
-    import json
-    f = open(path, 'w')
+    f = open(paths[0], 'w')
     f.write(json.dumps(answers_list.to_json(), indent=2))
     f.close()

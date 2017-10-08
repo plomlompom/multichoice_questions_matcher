@@ -3,6 +3,7 @@
 import unittest
 import jsonschema
 
+
 schema = {
     '$schema': 'http://json-schema.org/schema#',
     'title': 'answer set',
