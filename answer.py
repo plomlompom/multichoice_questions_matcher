@@ -127,7 +127,7 @@ if __name__ == '__main__':
         except matchlib.QuestionDuplicationError:
             if affirm('question already answered, overwrite old answer?'):
                 aq_list.add(aq, True)
-    json_dump = json.dumps(aq_list.to_json(), indent=2)
+    json_dump = json.dumps(aq_list.to_json(), indent=2, sort_keys=True)
     if args.target:
         f = open(args.target, 'w')
         f.write(json_dump)
