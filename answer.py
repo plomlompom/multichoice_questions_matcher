@@ -9,11 +9,12 @@ def get_string(prompt):
         string = input('string too short, retry: ')
     return string
 
+
 def get_int(prompt, maximum=None):
     str_limit = '…'
     if maximum:
         str_limit = str(maximum)
-    prompt = prompt + ' (0-' + str_limit + '): ' 
+    prompt = prompt + ' (0-' + str_limit + '): '
     string = input(prompt)
     while True:
         if not string.isdigit():
@@ -24,6 +25,7 @@ def get_int(prompt, maximum=None):
             string = input("value must be <= " + str(maximum) + ': ')
             continue
         return i
+
 
 def affirm(prompt):
     string = input(prompt + ' (y/n): ')
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         available_answers = []
         acceptable_answers = []
         more_answers = True
-        i_answers = -1 
+        i_answers = -1
         while more_answers:
             i_answers += 1
             while True:

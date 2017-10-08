@@ -51,6 +51,7 @@ schema = {
 class AnswersParseError(ValueError):
     pass
 
+
 class QuestionDuplicationError(ValueError):
     pass
 
@@ -144,7 +145,7 @@ class AnswersList:
         self.question_answer_complexes += [answer]
 
     def to_json(self):
-        l = []
+        answers_json = []
         for entry in self.question_answer_complexes:
             d = {
                 'question_prompt': entry.question.prompt,
@@ -160,8 +161,8 @@ class AnswersList:
                 if i in entry.acceptable_choices:
                     answer['acceptable'] = True
                 d['available_answers'] += [answer]
-            l += [d]
-        return l
+            answers_json += [d]
+        return answers_json
 
 
 class TestAll(unittest.TestCase):
