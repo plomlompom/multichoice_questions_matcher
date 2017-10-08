@@ -44,17 +44,16 @@ if __name__ == '__main__':
     paths = [sys.argv[1]]
     if len(sys.argv) == 3:
         paths += [sys.argv[2]]
-    answers_lists = []
-    for path in paths:
+    answers_lists = [matchlib.AnswersList(), matchlib.AnswersList()]
+    for i in range(len(paths)):
+        path = paths[i]
         if os.path.isfile(path):
             try:
                 answers_list = matchlib.AnswersList(path=path)
             except matchlib.AnswersParseError as err:
                 print(err)
                 exit(1)
-        answers_lists += [answers_list]
-    if len(answers_lists) == 0:
-        answers_lists = [matchlib.AnswersList()]
+            answers_lists[i] = answers_list
     answers_list = answers_lists[0]
     if len(answers_lists) == 2:
         questions_template = answers_lists[1]
