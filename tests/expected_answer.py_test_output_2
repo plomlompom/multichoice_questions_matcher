@@ -1,0 +1,36 @@
+QUESTION: your gender?
+#0: male
+#1: female
+#2: other
+Answer this question? (y/n): your answer? (0-2): importance? (0-…): QUESTION: best president?
+#0: Lincoln
+#1: Obama
+#2: Trump
+Answer this question? (y/n): QUESTION: do you masturbate in the shower?
+#0: yes
+#1: no
+Answer this question? (y/n): QUESTION: best food?
+#0: chicken
+#1: bread
+#2: chocolate
+Answer this question? (y/n): QUESTION: do you floss?
+#0: yes
+#1: no
+Answer this question? (y/n): add another answered question? (y/n): [
+  {
+    "importance": 0,
+    "prompt": "your gender?",
+    "selectables": [
+      {
+        "chosen": true,
+        "text": "male"
+      },
+      {
+        "text": "female"
+      },
+      {
+        "text": "other"
+      }
+    ]
+  }
+]
