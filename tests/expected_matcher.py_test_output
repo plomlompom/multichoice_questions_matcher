@@ -1,0 +1,53 @@
+Matching table column legend:
+c: person 1 chooses this answer
+C: person 2 chooses this answer
+a: person 1 accepts this as a valid choice for person 2
+A: person 2 accepts this as a valid choice for person 1
+==================================
+your gender?
+
+c|a|C|A|answer
+-+-+-+-+--------
+x| | |x|male
+ |x|x| |female
+ |x| | |other
+
+Person 1 assigns importance 100 to choice of person 2.
+Person 2 assigns importance 42 to choice of person 1.
+==================================
+best president?
+
+c|a|C|A|answer
+-+-+-+-+--------
+x|x|x|x|Lincoln
+ |x| |x|Obama
+ | | | |Trump
+
+Person 1 assigns importance 50 to choice of person 2.
+Person 2 assigns importance 50 to choice of person 1.
+==================================
+do you masturbate in the shower?
+
+c|a|C|A|answer
+-+-+-+-+--------
+x|x|x|x|yes
+ | | | |no
+
+Person 1 assigns importance 30 to choice of person 2.
+Person 2 assigns importance 92 to choice of person 1.
+==================================
+best food?
+
+c|a|C|A|answer
+-+-+-+-+--------
+ |x| |x|chicken
+ | |x|x|bread
+x|x| | |chocolate
+
+Person 1 assigns importance 25 to choice of person 2.
+Person 2 assigns importance 33 to choice of person 1.
+==================================
+Matched questions: 4
+Non-matched questions from 1: 1
+Non-matched questions from 2: 0
+Overall match: 61%

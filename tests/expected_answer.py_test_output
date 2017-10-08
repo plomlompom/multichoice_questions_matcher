@@ -1,0 +1,31 @@
+add another answered question? (y/n): answer must be either "y" or "n": question prompt: string too short, retry: selectable #0: an acceptable choice of your ideal match? (y/n): selectable #1: duplicate selectable, please try again
+selectable #1: an acceptable choice of your ideal match? (y/n): add another selectable? (y/n): how important is your ideal match's choice to you? (0-…): please enter only digits: your own choice of answer?  (0-1): value must be <= 1: add another answered question? (y/n): question prompt: selectable #0: an acceptable choice of your ideal match? (y/n): selectable #1: an acceptable choice of your ideal match? (y/n): add another selectable? (y/n): how important is your ideal match's choice to you? (0-…): your own choice of answer?  (0-1): question already answered, overwrite old answer? (y/n): add another answered question? (y/n): question prompt: selectable #0: an acceptable choice of your ideal match? (y/n): selectable #1: an acceptable choice of your ideal match? (y/n): add another selectable? (y/n): how important is your ideal match's choice to you? (0-…): your own choice of answer?  (0-1): add another answered question? (y/n): question prompt: selectable #0: an acceptable choice of your ideal match? (y/n): selectable #1: an acceptable choice of your ideal match? (y/n): add another selectable? (y/n): how important is your ideal match's choice to you? (0-…): please enter only digits: your own choice of answer?  (0-1): question already answered, overwrite old answer? (y/n): add another answered question? (y/n): [
+  {
+    "importance": 0,
+    "prompt": "a",
+    "selectables": [
+      {
+        "chosen": true,
+        "text": "a"
+      },
+      {
+        "acceptable": true,
+        "text": "b"
+      }
+    ]
+  },
+  {
+    "importance": 2,
+    "prompt": "b",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "a"
+      },
+      {
+        "chosen": true,
+        "text": "b"
+      }
+    ]
+  }
+]
