@@ -75,7 +75,8 @@ if __name__ == '__main__':
     if args.source:
         questions_template = aq_lists[1]
         questions = [a.question for a
-                     in questions_template.db
+                     in sorted(questions_template.db,
+                               key=lambda aq: aq.importance, reverse=True)
                      if a.question not in aq_list.unique_questions]
         for q in questions:
             print('QUESTION: ' + q.prompt)
