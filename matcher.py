@@ -87,8 +87,8 @@ def print_analysis(aqs_1, aqs_2):
     print('a: person 1 accepts this as a valid choice for person 2')
     print('A: person 2 accepts this as a valid choice for person 1')
     print('==================================')
-    for aq_1 in aqs_lists[0].db:
-        for aq_2 in aqs_lists[1].db:
+    for aq_1 in aqs_1.db:
+        for aq_2 in aqs_2.db:
             if aq_1.question == aq_2.question:
                 len_shared_questions += 1
                 print(aq_1.question.prompt)
