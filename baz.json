@@ -1,44 +1,44 @@
 [
   {
     "importance": 0,
-    "available_answers": [
+    "selectables": [
       {
         "chosen": true,
-        "answer_text": "a"
+        "text": "a"
       },
       {
-        "answer_text": "b"
+        "text": "b"
       }
     ],
-    "question_prompt": "a"
+    "text": "a"
   },
   {
     "importance": 0,
-    "available_answers": [
+    "selectables": [
       {
         "chosen": true,
-        "answer_text": "a"
+        "text": "a"
       },
       {
-        "answer_text": "b"
+        "text": "b"
       },
       {
-        "answer_text": "c"
+        "text": "c"
       }
     ],
-    "question_prompt": "a"
+    "text": "a"
   },
   {
     "importance": 0,
-    "available_answers": [
+    "selectables": [
       {
         "chosen": true,
-        "answer_text": "a"
+        "text": "a"
       },
       {
-        "answer_text": "c"
+        "text": "c"
       }
     ],
-    "question_prompt": "a"
+    "text": "a"
   }
 ]

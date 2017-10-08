@@ -40,11 +40,13 @@ if __name__ == '__main__':
     import json
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-t', '--target', metavar='FILEPATH',
-                           help='answers file to write/append')
+                           help='answered questions file to write/append')
     argparser.add_argument('-s', '--source', metavar='FILEPATH',
-                           help='answers file to source new questions from')
+                           help='answered questions file to source new ' +
+                                'questions from')
     args = argparser.parse_args()
-    answers_lists = [matchlib.AnswersList(), matchlib.AnswersList()]
+    aq_lists = [matchlib.AnsweredQuestionsList(),
+                matchlib.AnsweredQuestionsList()]
     paths = []
     if args.target:
         paths += [args.target]
@@ -54,66 +56,68 @@ if __name__ == '__main__':
         path = paths[i]
         if os.path.isfile(path):
             try:
-                answers_list = matchlib.AnswersList(path=path)
-            except matchlib.AnswersParseError as err:
+                aq_list = matchlib.AnsweredQuestionsList(path=path)
+            except matchlib.AnsweredQuestionsParseError as err:
                 print(err)
                 exit(1)
-            answers_lists[i] = answers_list
-    answers_list = answers_lists[0]
+            aq_lists[i] = aq_list
+    aq_list = aq_lists[0]
     if args.source:
-        questions_template = answers_lists[1]
+        questions_template = aq_lists[1]
         questions = [a.question for a
-                     in questions_template.question_answer_complexes
-                     if a.question not in answers_list.unique_questions]
+                     in questions_template.db
+                     if a.question not in aq_list.unique_questions]
         for q in questions:
             print('QUESTION: ' + q.prompt)
-            for i in range(len(q.answers)):
-                print('#%s: %s' % (str(i), q.answers[i]))
+            for i in range(len(q.selectables)):
+                print('#%s: %s' % (str(i), q.selectables[i]))
             i_max = i
             if affirm('Answer this question?'):
-                acceptable_choices = []
+                acceptable = []
                 choice = get_int('your answer?', i_max)
                 importance = get_int('importance?')
                 if importance > 0:
-                    for i in range(len(q.answers)):
-                        if affirm('acceptable answer? ' + q.answers[i]):
-                            acceptable_choices += [i]
-                a = matchlib.Answer(q, choice, acceptable_choices, importance)
-                answers_list.add_answer(a)
+                    for i in range(len(q.selectables)):
+                        if affirm('acceptable choice of your ideal match? ' +
+                                  q.selectables[i]):
+                            acceptable += [i]
+                aq = matchlib.AnsweredQuestion(q, choice, acceptable,
+                                               importance)
+                aq_list.add(aq)
     while True:
-        if not affirm('add another question+answer?'):
+        if not affirm('add another answered question?'):
             break
         prompt = get_string('question prompt: ')
-        available_answers = []
-        acceptable_answers = []
-        more_answers = True
-        i_answers = -1
-        while more_answers:
-            i_answers += 1
+        selectables = []
+        acceptable_choices = []
+        more_aqs = True
+        i_aqs = -1
+        while more_aqs:
+            i_aqs += 1
             while True:
-                answer = get_string('answer #' + str(i_answers) + ': ')
-                if answer not in available_answers:
+                selectable = get_string('selectable #' + str(i_aqs) + ': ')
+                if selectable not in selectables:
                     break
-                print('duplicate answer, please try again')
-            available_answers += [answer]
-            if affirm('an acceptable answer of your ideal match?'):
-                acceptable_answers += [i_answers]
-            if len(available_answers) < 2:
+                print('duplicate selectable, please try again')
+            selectables += [selectable]
+            if affirm('an acceptable choice of your ideal match?'):
+                acceptable_choices += [i_aqs]
+            if len(selectables) < 2:
                 continue
-            if not affirm('add another answer?'):
-                more_answers = False
-        question = matchlib.MultiChoiceQuestion(prompt, available_answers)
-        importance = get_int('how important is your ideal match\'s answer to '
+            if not affirm('add another selectable?'):
+                more_aqs = False
+        question = matchlib.MultiChoiceQuestion(prompt, selectables)
+        importance = get_int('how important is your ideal match\'s choice to '
                              'you?')
-        choice = get_int('your own choice of answer? ', i_answers)
-        answer = matchlib.Answer(question, choice, acceptable_answers,
-                                 importance)
+        choice = get_int('your own choice of answer? ', i_aqs)
+        aq = matchlib.AnsweredQuestion(question, choice, acceptable_choices,
+                                       importance)
         try:
-            answers_list.add_answer(answer)
+            aq_list.add(aq)
         except matchlib.QuestionDuplicationError:
             if affirm('question already answered, overwrite old answer?'):
-                answers_list.add_answer(answer, True)
-    json_dump = json.dumps(answers_list.to_json(), indent=2)
+                aq_list.add(aq, True)
+    json_dump = json.dumps(aq_list.to_json(), indent=2)
     if args.target:
         f = open(args.target, 'w')
         f.write(json_dump)

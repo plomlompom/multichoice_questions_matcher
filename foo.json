@@ -1,61 +1,85 @@
-[{
-  "question_prompt": "best president?",
-  "available_answers": [{
-    "answer_text": "Lincoln",
-    "chosen": true,
-    "acceptable": true
-  }, {
-    "answer_text": "Obama",
-    "acceptable": true
-  }, {
-    "answer_text": "Trump"
-  }],
-  "importance": 50
-}, {
-  "question_prompt": "do you floss?",
-  "available_answers": [{
-    "answer_text": "yes",
-    "acceptable": true
-  }, {
-    "answer_text": "no",
-    "chosen": true,
-    "acceptable": true
-  }],
-  "importance": 23
-}, {
-  "question_prompt": "best food?",
-  "available_answers": [{
-    "answer_text": "chicken",
-    "acceptable": true
-  }, {
-    "answer_text": "bread"
-  }, {
-    "answer_text": "chocolate",
-    "chosen": true,
-    "acceptable": true
-  }],
-  "importance": 25
-}, {
-  "question_prompt": "your gender?",
-  "available_answers": [{
-    "answer_text": "male",
-    "chosen": true
-  }, {
-    "answer_text": "female",
-    "acceptable": true
-  }, {
-    "answer_text": "other",
-    "acceptable": true
-  }],
-  "importance": 100
-}, {
-  "question_prompt": "do you masturbate in the shower?",
-  "available_answers": [{
-    "answer_text": "yes",
-    "acceptable": true,
-    "chosen": true
-  }, {
-    "answer_text": "no"
-  }],
-  "importance": 30
-}]
+[
+  {
+    "importance": 50,
+    "prompt": "best president?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "Lincoln",
+        "chosen": true
+      },
+      {
+        "acceptable": true,
+        "text": "Obama"
+      },
+      {
+        "text": "Trump"
+      }
+    ]
+  },
+  {
+    "importance": 23,
+    "prompt": "do you floss?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "yes"
+      },
+      {
+        "acceptable": true,
+        "text": "no",
+        "chosen": true
+      }
+    ]
+  },
+  {
+    "importance": 25,
+    "prompt": "best food?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "chicken"
+      },
+      {
+        "text": "bread"
+      },
+      {
+        "acceptable": true,
+        "text": "chocolate",
+        "chosen": true
+      }
+    ]
+  },
+  {
+    "importance": 100,
+    "prompt": "your gender?",
+    "selectables": [
+      {
+        "text": "male",
+        "chosen": true
+      },
+      {
+        "acceptable": true,
+        "text": "female"
+      },
+      {
+        "acceptable": true,
+        "text": "other"
+      }
+    ]
+  },
+  {
+    "importance": 30,
+    "prompt": "do you masturbate in the shower?",
+    "selectables": [
+      {
+        "acceptable": true,
+        "text": "yes",
+        "chosen": true
+      },
+      {
+        "text": "no"
+      }
+    ]
+  }
+]

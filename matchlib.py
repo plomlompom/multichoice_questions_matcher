@@ -6,21 +6,20 @@ import jsonschema
 
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'answer set',
     'type': 'array',
     'items': {
         'type': 'object',
         'properties': {
-            'question_prompt': {
+            'prompt': {
                 'type': 'string',
                 'minLength': 1
             },
-            'available_answers': {
+            'selectables': {
                 'type': 'array',
                 'items': {
                     'type': 'object',
                     'properties': {
-                        'answer_text': {
+                        'text': {
                             'type': 'string',
                             'minLength': 1
                         },
@@ -33,7 +32,7 @@ schema = {
                             'default': False
                         }
                     },
-                    'required': ['answer_text'],
+                    'required': ['text'],
                     'additionalProperties': False
                 },
                 'minItems': 2
@@ -43,13 +42,13 @@ schema = {
                 'minimum': 0
             }
         },
-        'required': ['question_prompt', 'available_answers', 'importance'],
+        'required': ['prompt', 'selectables', 'importance'],
         'additionalProperties': False
     }
 }
 
 
-class AnswersParseError(ValueError):
+class AnsweredQuestionsParseError(ValueError):
     pass
 
 
@@ -59,38 +58,39 @@ class QuestionDuplicationError(ValueError):
 
 class MultiChoiceQuestion:
 
-    def __init__(self, question_prompt, available_answers):
-        unique_answers = []
-        for answer in available_answers:
-            if answer in unique_answers:
-                raise ValueError('duplicate available answer text: ' + answer)
-            unique_answers += [answer]
-        self.prompt = question_prompt
-        self.answers = available_answers
+    def __init__(self, prompt, selectables):
+        unique_selectables = []
+        for selectable in selectables:
+            if selectable in unique_selectables:
+                raise ValueError('duplicate selectable: ' + selectable)
+            unique_selectables += [selectable]
+        self.prompt = prompt
+        self.selectables = selectables
 
     def __eq__(self, other):
         if type(other) != MultiChoiceQuestion:
             msg = 'can compare MultiChoiceQuestion only with same type'
             raise TypeError(msg)
-        return self.prompt == other.prompt and self.answers == other.answers
+        return self.prompt == other.prompt and \
+            self.selectables == other.selectables
 
 
-class Answer:
+class AnsweredQuestion:
 
-    def __init__(self, question, choice, acceptable_choices, importance):
+    def __init__(self, question, choice, acceptable, importance):
         self.question = question
         self.choice = choice
-        self.acceptable_choices = acceptable_choices
+        self.acceptable = acceptable
         self.importance = importance
 
 
-class AnswersList:
+class AnsweredQuestionsList:
 
-    def __init__(self, json_dict=[], answers=[], path=None):
-        self.question_answer_complexes = []
+    def __init__(self, json_dict=[], aqs=[], path=None):
+        self.db = []
         self.unique_questions = []
-        for answer in answers:
-            self.add_answer(answer)
+        for aq in aqs:
+            self.add(aq)
         self.add_json(json_dict)
         if path:
             self.add_file(path)
@@ -103,107 +103,108 @@ class AnswersList:
         try:
             d = json.loads(json_text)
         except json.decoder.JSONDecodeError as err:
-            raise AnswersParseError('Trouble JSON-decoding answers file: '
-                                    + str(err))
+            msg = 'Trouble JSON-decoding answered questions file: ' + str(err)
+            raise AnsweredQuestionsParseError(msg)
         try:
             self.add_json(d)
         except (ValueError, jsonschema.exceptions.ValidationError) as err:
-            raise AnswersParseError('Malformed answers file: ' + str(err))
+            msg = 'Malformed answered questions file: ' + str(err)
+            raise AnsweredQuestionsParseError(msg)
 
     def add_json(self, json):
         jsonschema.validate(json, schema)
-        for answer in json:
-            available_answer_texts = []
+        for aq in json:
+            selectables = []
             choice = -1
-            acceptable_choices = []
-            for i in range(len(answer['available_answers'])):
-                available_answer = answer['available_answers'][i]
-                available_answer_texts += [available_answer['answer_text']]
-                if 'chosen' in available_answer and available_answer['chosen']:
+            acceptable = []
+            for i in range(len(aq['selectables'])):
+                selectable = aq['selectables'][i]
+                selectables += [selectable['text']]
+                if 'chosen' in selectable and selectable['chosen']:
                     if choice > -1:
-                        raise ValueError('more than one answer thosen')
+                        raise ValueError('more than one selectable chosen')
                     choice = i
-                if 'acceptable' in available_answer and \
-                        available_answer['acceptable']:
-                    acceptable_choices += [i]
+                if 'acceptable' in selectable and \
+                        selectable['acceptable']:
+                    acceptable += [i]
             if choice == -1:
-                raise ValueError('no answer chosen')
-            question = MultiChoiceQuestion(answer['question_prompt'],
-                                           available_answer_texts)
-            answer_prepared = Answer(question, choice, acceptable_choices,
-                                     answer['importance'])
-            self.add_answer(answer_prepared)
+                raise ValueError('no selectable chosen')
+            question = MultiChoiceQuestion(aq['prompt'], selectables)
+            prepared = AnsweredQuestion(question, choice, acceptable,
+                                        aq['importance'])
+            self.add(prepared)
 
-    def add_answer(self, answer, overwrite=False):
-        if answer.question in self.unique_questions:
+    def add(self, aq, overwrite=False):
+        if aq.question in self.unique_questions:
             if overwrite:
-                i = self.unique_questions.index(answer.question)
-                self.question_answer_complexes[i] = answer
+                i = self.unique_questions.index(aq.question)
+                self.db[i] = aq
                 return
             else:
                 raise QuestionDuplicationError
-        self.unique_questions += [answer.question]
-        self.question_answer_complexes += [answer]
+        self.unique_questions += [aq.question]
+        self.db += [aq]
 
     def to_json(self):
-        answers_json = []
-        for entry in self.question_answer_complexes:
+        aq_json = []
+        for entry in self.db:
             d = {
-                'question_prompt': entry.question.prompt,
-                'available_answers': [],
+                'prompt': entry.question.prompt,
+                'selectables': [],
                 'importance': entry.importance,
             }
-            for i in range(len(entry.question.answers)):
-                answer = {
-                    'answer_text': entry.question.answers[i]
+            for i in range(len(entry.question.selectables)):
+                selectable = {
+                    'text': entry.question.selectables[i]
                 }
                 if i == entry.choice:
-                    answer['chosen'] = True
-                if i in entry.acceptable_choices:
-                    answer['acceptable'] = True
-                d['available_answers'] += [answer]
-            answers_json += [d]
-        return answers_json
+                    selectable['chosen'] = True
+                if i in entry.acceptable:
+                    selectable['acceptable'] = True
+                d['selectables'] += [selectable]
+            aq_json += [d]
+        return aq_json
 
 
 class TestAll(unittest.TestCase):
 
-    def test_answerlist(self):
+    def test_answered_questions_list(self):
         from functools import partial
         from copy import deepcopy
         schema_fail = partial(self.assertRaises,
                               jsonschema.exceptions.ValidationError,
-                              AnswersList)
-        value_fail = partial(self.assertRaises, ValueError, AnswersList)
+                              AnsweredQuestionsList)
+        value_fail = partial(self.assertRaises, ValueError,
+                             AnsweredQuestionsList)
         schema_fail({})
-        AnswersList([])
+        AnsweredQuestionsList([])
         schema_fail([{}])
         schema_fail([0])
         good = [{
-          "question_prompt": "?",
-          "available_answers": [{
-            "answer_text": "0",
+          "prompt": "?",
+          "selectables": [{
+            "text": "0",
             "chosen": False,
             "acceptable": True
             }, {
-            "answer_text": "1",
+            "text": "1",
             "chosen": True,
             "acceptable": True
           }],
           "importance": 0
         }]
-        AnswersList(good)
+        AnsweredQuestionsList(good)
 
         # test JSON schema constraints
         bad = deepcopy(good)
-        del bad[0]['available_answers'][0]
+        del bad[0]['selectables'][0]
         schema_fail(bad)
         bad = deepcopy(good)
-        bad[0]['question_prompt'] = 0
+        bad[0]['prompt'] = 0
         schema_fail(bad)
-        bad[0]['question_prompt'] = ''
+        bad[0]['prompt'] = ''
         schema_fail(bad)
-        del bad[0]['question_prompt']
+        del bad[0]['prompt']
         schema_fail(bad)
         bad = deepcopy(good)
         bad[0]['importance'] = 'x'
@@ -215,55 +216,56 @@ class TestAll(unittest.TestCase):
         del bad[0]['importance']
         schema_fail(bad)
         bad = deepcopy(good)
-        bad[0]['available_answers'][0]['answer_text'] = 0
+        bad[0]['selectables'][0]['text'] = 0
         schema_fail(bad)
-        bad[0]['available_answers'][0]['answer_text'] = ''
+        bad[0]['selectables'][0]['text'] = ''
         schema_fail(bad)
-        del bad[0]['available_answers'][0]['answer_text']
-        schema_fail(bad)
-        bad = deepcopy(good)
-        bad[0]['available_answers'][0]['chosen'] = 'x'
+        del bad[0]['selectables'][0]['text']
         schema_fail(bad)
         bad = deepcopy(good)
-        bad[0]['available_answers'][0]['acceptable'] = 'x'
+        bad[0]['selectables'][0]['chosen'] = 'x'
         schema_fail(bad)
-        bad[0]['available_answers'][0] = 'x'
+        bad = deepcopy(good)
+        bad[0]['selectables'][0]['acceptable'] = 'x'
+        schema_fail(bad)
+        bad[0]['selectables'][0] = 'x'
         schema_fail(bad)
         bad = deepcopy(good)
         bad[0]['foo'] = 0
         schema_fail(bad)
         bad = deepcopy(good)
-        bad[0]['available_answers'][0]['foo'] = 0
+        bad[0]['selectables'][0]['foo'] = 0
         schema_fail(bad)
 
         # test extra-schema uniqueness constraints
         bad = deepcopy(good)
-        bad[0]['available_answers'][0]['chosen'] = True
+        bad[0]['selectables'][0]['chosen'] = True
         value_fail(bad)
         bad = deepcopy(good)
-        bad[0]['available_answers'][1]['chosen'] = False
+        bad[0]['selectables'][1]['chosen'] = False
         value_fail(bad)
         bad = deepcopy(good)
-        bad[0]['available_answers'][1]['answer_text'] = '0'
+        bad[0]['selectables'][1]['text'] = '0'
         value_fail(bad)
         bad = deepcopy(good)
         bad += [deepcopy(bad[0])]
-        self.assertRaises(QuestionDuplicationError, AnswersList, bad)
+        self.assertRaises(QuestionDuplicationError, AnsweredQuestionsList, bad)
 
         # test input JSON == output JSON
         good2 = deepcopy(good)
-        del good2[0]['available_answers'][0]['chosen']
+        del good2[0]['selectables'][0]['chosen']
         good2 += [deepcopy(good2[0])]
-        good2[1]['question_prompt'] += '?'
-        a = AnswersList(good2)
+        good2[1]['prompt'] += '?'
+        a = AnsweredQuestionsList(good2)
         self.assertEqual(a.to_json(), good2)
 
         # test overwrite
-        alt_answer = deepcopy(a.question_answer_complexes[1])
-        alt_answer.choice = 0
+        alt_aq = deepcopy(a.db[1])
+        alt_aq .choice = 0
         good_cmp = deepcopy(good2)
-        good_cmp[1]['available_answers'][0]['chosen'] = True
-        good_cmp[1]['available_answers'][1]['chosen'] = False
-        self.assertRaises(QuestionDuplicationError, a.add_answer, alt_answer)
-        a.add_answer(alt_answer, True)
-        self.assertEqual(a.to_json(), AnswersList(good_cmp).to_json())
+        good_cmp[1]['selectables'][0]['chosen'] = True
+        good_cmp[1]['selectables'][1]['chosen'] = False
+        self.assertRaises(QuestionDuplicationError, a.add, alt_aq)
+        a.add(alt_aq, True)
+        self.assertEqual(a.to_json(),
+                         AnsweredQuestionsList(good_cmp).to_json())
