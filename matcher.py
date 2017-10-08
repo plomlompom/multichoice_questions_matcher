@@ -99,3 +99,17 @@ if __name__ == '__main__':
             exit(1)
         aqs_lists += [aqs_list]
     print(match(aqs_lists[0], aqs_lists[1]))
+    for aq_1 in aqs_lists[0].db:
+        for aq_2 in aqs_lists[1].db:
+            if aq_1.question == aq_2.question:
+                print('QUESTION:', aq_1.question.prompt)
+                print(aq_1.importance, aq_2.importance)
+                for i in range(len(aq_1.question.selectables)):
+                    selectable = aq_1.question.selectables[i]
+                    chosen_1 = 'y' if i == aq_1.choice else ' '
+                    chosen_2 = 'y' if i == aq_2.choice else ' '
+                    acceptable_1 = 'a' if i in aq_1.acceptable else ' '
+                    acceptable_2 = 'a' if i in aq_2.acceptable else ' '
+                    print(chosen_1, acceptable_1, chosen_2, acceptable_2,
+                          selectable)
+                break
