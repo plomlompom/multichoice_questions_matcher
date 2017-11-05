@@ -55,8 +55,7 @@ if __name__ == '__main__':
         paths += [args.target]
     if args.source:
         paths += [args.source]
-    for i in range(len(paths)):
-        path = paths[i]
+    for i, path in enumerate(paths):
         if args.get and i == 1:
             try:
                 path, _ = urllib.request.urlretrieve(path)
@@ -79,17 +78,17 @@ if __name__ == '__main__':
                      if a.question not in aq_list.unique_questions]
         for q in questions:
             print('QUESTION: ' + q.prompt)
-            for i in range(len(q.selectables)):
-                print('#%s: %s' % (str(i), q.selectables[i]))
+            for i, selectable in enumerate(q.selectables):
+                print('#%s: %s' % (str(i), selectable))
             i_max = i
             if affirm('Answer this question?'):
                 acceptable = []
                 choice = get_int('your answer?', i_max)
                 importance = get_int('importance?')
                 if importance > 0:
-                    for i in range(len(q.selectables)):
+                    for i, selectable in enumerate(q.selectables):
                         if affirm('acceptable choice of your ideal match? ' +
-                                  q.selectables[i]):
+                                  selectable):
                             acceptable += [i]
                 aq = matchlib.AnsweredQuestion(q, choice, acceptable,
                                                importance)
@@ -100,26 +99,26 @@ if __name__ == '__main__':
         prompt = get_string('question prompt: ')
         selectables = []
         acceptable_choices = []
-        more_aqs = True
-        i_aqs = -1
-        while more_aqs:
-            i_aqs += 1
+        more_selectables = True
+        i_selectables = -1
+        while more_selectables:
+            i_selectables += 1
             while True:
-                selectable = get_string('selectable #' + str(i_aqs) + ': ')
+                selectable = get_string('selectable #%s: ' % i_selectables)
                 if selectable not in selectables:
                     break
                 print('duplicate selectable, please try again')
             selectables += [selectable]
             if affirm('an acceptable choice of your ideal match?'):
-                acceptable_choices += [i_aqs]
+                acceptable_choices += [i_selectables]
             if len(selectables) < 2:
                 continue
             if not affirm('add another selectable?'):
-                more_aqs = False
+                more_selectables = False
         question = matchlib.MultiChoiceQuestion(prompt, selectables)
         importance = get_int('how important is your ideal match\'s choice to '
                              'you?')
-        choice = get_int('your own choice of answer? ', i_aqs)
+        choice = get_int('your own choice of answer? ', i_selectables)
         aq = matchlib.AnsweredQuestion(question, choice, acceptable_choices,
                                        importance)
         try:
@@ -129,8 +128,7 @@ if __name__ == '__main__':
                 aq_list.add(aq, True)
     json_dump = json.dumps(aq_list.to_json(), indent=2, sort_keys=True)
     if args.target:
-        f = open(args.target, 'w')
-        f.write(json_dump)
-        f.close()
+        with open(args.target, 'w') as f:
+            f.write(json_dump)
     else:
         print(json_dump)

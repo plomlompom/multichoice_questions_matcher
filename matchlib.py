@@ -97,9 +97,8 @@ class AnsweredQuestionsList:
 
     def add_file(self, path):
         import json
-        f = open(path, 'r')
-        json_text = f.read()
-        f.close()
+        with open(path, 'r') as f:
+            json_text = f.read()
         try:
             d = json.loads(json_text)
         except json.decoder.JSONDecodeError as err:
@@ -117,8 +116,7 @@ class AnsweredQuestionsList:
             selectables = []
             choice = -1
             acceptable = []
-            for i in range(len(aq['selectables'])):
-                selectable = aq['selectables'][i]
+            for i, selectable in enumerate(aq['selectables']):
                 selectables += [selectable['text']]
                 if 'chosen' in selectable and selectable['chosen']:
                     if choice > -1:
@@ -153,9 +151,9 @@ class AnsweredQuestionsList:
                 'selectables': [],
                 'importance': entry.importance,
             }
-            for i in range(len(entry.question.selectables)):
+            for i, selectable_text in enumerate(entry.question.selectables):
                 selectable = {
-                    'text': entry.question.selectables[i]
+                    'text': selectable_text
                 }
                 if i == entry.choice:
                     selectable['chosen'] = True

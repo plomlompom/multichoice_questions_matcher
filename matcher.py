@@ -95,8 +95,7 @@ def print_analysis(aqs_1, aqs_2):
                 print()
                 print('c|a|C|A|answer')
                 print('-+-+-+-+--------')
-                for i in range(len(aq_1.question.selectables)):
-                    selectable = aq_1.question.selectables[i]
+                for i, selectable in enumerate(aq_1.question.selectables):
                     chosen_1 = 'x|' if i == aq_1.choice else ' |'
                     chosen_2 = 'x|' if i == aq_2.choice else ' |'
                     acceptable_1 = 'x|' if i in aq_1.acceptable else ' |'
@@ -137,8 +136,7 @@ if __name__ == '__main__':
                                 'twice) (valid values: 0, 1)')
     args = argparser.parse_args()
     aqs_lists = []
-    for i in range(len(args.aqs_files)):
-        path = args.aqs_files[i]
+    for i, path in enumerate(args.aqs_files):
         if args.get and str(i) in args.get:
             try:
                 path, _ = urllib.request.urlretrieve(path)
