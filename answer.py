@@ -40,38 +40,37 @@ if __name__ == '__main__':
     import json
     import urllib
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('-t', '--target', metavar='FILEPATH',
+    argparser.add_argument('-t', '--target', metavar='PATH',
                            help='answered questions file to write/append')
-    argparser.add_argument('-s', '--source', metavar='FILEPATH',
-                           help='answered questions file to source new ' +
-                                'questions from')
-    argparser.add_argument('-g', '--get', action='store_true',
-                           help='treat FILEPATH for --source as URL to '
-                                'retrieve data remotely from')
+    argparser.add_argument('-s', '--source', metavar='PATH',
+                           help='answered questions file to source new '
+                                'questions from; may be local file path or '
+                                'URL')
     args = argparser.parse_args()
-    aq_lists = []
-    paths = []
+    aq_list = matchlib.AnsweredQuestionsList()
     if args.target:
-        paths += [args.target]
+        if os.path.isfile(args.target):
+            try:
+                aq_list = matchlib.AnsweredQuestionsList(path=args.target)
+            except matchlib.AnsweredQuestionsParseError as err:
+                print(err)
+                exit(1)
     if args.source:
-        paths += [args.source]
-    for i, path in enumerate(paths):
-        if args.get and i == 1:
+        path = args.source
+        if urllib.parse.urlparse(path).scheme != '':
             try:
                 path, _ = urllib.request.urlretrieve(path)
             except (ValueError, urllib.error.HTTPError) as err:
                 print('trouble retrieving file:', err)
                 exit(1)
-        if os.path.isfile(path):
-            try:
-                aq_list = matchlib.AnsweredQuestionsList(path=path)
-            except matchlib.AnsweredQuestionsParseError as err:
-                print(err)
-                exit(1)
-            aq_lists += [aq_list]
-    aq_list = aq_lists[0] if args.target else matchlib.AnsweredQuestionsList()
-    if args.source:
-        questions_template = aq_lists[int(args.target is not None)]
+        if not os.path.isfile(path):
+            print('source file not found:', path)
+            exit(1)
+        try:
+            questions_template = matchlib.AnsweredQuestionsList(path=path)
+        except matchlib.AnsweredQuestionsParseError as err:
+            print(err)
+            exit(1)
         questions = [a.question for a
                      in sorted(questions_template.db,
                                key=lambda aq: aq.importance, reverse=True)

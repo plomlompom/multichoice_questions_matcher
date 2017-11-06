@@ -126,18 +126,14 @@ if __name__ == '__main__':
     import urllib
     argparser = argparse.ArgumentParser()
     argparser.add_argument('aqs_files', nargs=2,
-                           metavar='FILEPATH',
-                           help='one of both answered questions files which to'
-                                ' compare')
-    argparser.add_argument('-g', '--get', action='append', choices=['0', '1'],
-                           metavar='INT',
-                           help='define INT-nth FILEPATH to be URL to get '
-                                'answered questions from (option may be used '
-                                'twice) (valid values: 0, 1)')
+                           metavar='PATH',
+                           help='location of one of both answered questions '
+                                'files which to compare; may be local file '
+                                'path or URL')
     args = argparser.parse_args()
     aqs_lists = []
     for i, path in enumerate(args.aqs_files):
-        if args.get and str(i) in args.get:
+        if urllib.parse.urlparse(path).scheme != '':
             try:
                 path, _ = urllib.request.urlretrieve(path)
             except (ValueError, urllib.error.HTTPError) as err:
