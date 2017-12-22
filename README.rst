@@ -35,4 +35,5 @@ filesystem paths or URLs to remote locations):
 
   $ ./matcher.py FILE_1 FILE_2
 
-Some example profile files can be found in the ./tests/ directory.
+Some example profile files (foo.json, bar.json, baz.json) can be found in the
+./tests/ directory.
