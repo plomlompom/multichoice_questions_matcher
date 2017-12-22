@@ -1,6 +1,12 @@
 multichoice_questions_matcher
 =============================
 
+Toolset for profiling oneself and one's matching desires by answering questions
+and setting expectations for question answers from others. Questions, answers,
+and answer expectations are stored in JSON files. Such files can be matched
+against each other, producing a match percentage. Files may be exchanged by any
+medium; they might be stored on the public web.
+
 Setup
 -----
 
@@ -28,3 +34,5 @@ Compare/analyze matching questions/answers from FILE_1, FILE_2 (may be local
 filesystem paths or URLs to remote locations):
 
   $ ./matcher.py FILE_1 FILE_2
+
+Some example profile files can be found in the ./tests/ directory.
